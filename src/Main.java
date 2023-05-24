@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Main {
 
@@ -94,7 +95,29 @@ public class Main {
 
     
     public static void main(String args[]) throws IOException {
-        Controller.start();
+        //Controller.start();
+        Ed448GPoint G = new Ed448GPoint(new BigInteger("8"), true);
+        if (G.isOnCurve()) {
+            int passed = 0;
+            int failed = 0;
+            for (int i = 0; i < 100; i++) {
+                Random rand = new Random();
+                int k = rand.nextInt(Integer.MAX_VALUE);
+                BigInteger K = new BigInteger(Integer.toString(k));
+                int t = rand.nextInt(Integer.MAX_VALUE);
+                BigInteger T = new BigInteger(Integer.toString(t));
+
+                Ed448GPoint left = G.multiply(T).multiply(K);
+                Ed448GPoint middle = G.multiply(K).multiply(T);
+                Ed448GPoint right = G.multiply(K.multiply(T).mod(Ed448GPoint.r));
+                if (left.equals(middle) && middle.equals(right)) {
+                    passed++;
+                } else {
+                    failed++;
+                }
+            }
+            System.out.println("All tests complete: " + passed + " passed, " + failed + " failed");
+        }
     }
 }
 

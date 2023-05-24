@@ -4,34 +4,31 @@ import java.math.BigInteger;
 public class Ed448GPoint {
     public BigInteger x;
     public BigInteger y;
-    public BigInteger p;
-    public BigInteger d = new BigInteger("-39801");
+    //public BigInteger p = new BigDecimal("7.26839E+134").toBigInteger();
+    public static final BigInteger p = new BigInteger("2").pow(448).subtract(new BigInteger("2").pow(224)).subtract(BigInteger.ONE);
+    public static final BigInteger d = new BigInteger("-39081");
+    public static final BigInteger r = new BigInteger("2").pow(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885"));
 
     public Ed448GPoint() {
-        this.x = new BigInteger("0");
-        this.y = new BigInteger("1");
-        BigDecimal bd = new BigDecimal("7.26839E+134");
-        this.p = bd.toBigInteger();
+        this.x = BigInteger.ZERO;
+        this.y = BigInteger.ONE;
     }
 
     public Ed448GPoint(BigInteger x, BigInteger y) {
         this.x = x;
         this.y = y;
-        BigDecimal bd = new BigDecimal("7.26839E+134");
-        this.p = bd.toBigInteger();
     }
 
     // Point from x and lsb of y
     // No clue if this is right, not sure where to find more info on this
-    public Ed448GPoint(BigInteger x) {
+    public Ed448GPoint(BigInteger x, boolean lsb) {
         this.x = x;
-        BigDecimal bd = new BigDecimal("7.26839E+134");
-        this.p = bd.toBigInteger();
 
-        BigInteger numerator = x.multiply(x);
-        numerator = BigInteger.ONE.subtract(numerator);
+        // 1 - x^2
+        BigInteger numerator = BigInteger.ONE.subtract(x.multiply(x));
         numerator = numerator.mod(p);
 
+        // 1 + 39081x^2
         BigInteger denominator = x.multiply(x).multiply(new BigInteger("39081"));
         denominator = BigInteger.ONE.add(denominator);
         denominator = denominator.modInverse(p);
@@ -39,7 +36,7 @@ public class Ed448GPoint {
         BigInteger radicand = numerator.multiply(denominator);
         radicand = radicand.mod(p);
 
-        this.y = sqrt(radicand, p, true);
+        this.y = sqrt(radicand, p, lsb);
 
     }
 
@@ -65,46 +62,58 @@ public class Ed448GPoint {
         return (r.multiply(r).subtract(v).mod(p).signum() == 0) ? r : null;
     }
 
-    public boolean isEqual(Ed448GPoint a, Ed448GPoint b) {
-        return a.x.equals(b.x) && a.y.equals(b.y);
+    public boolean equals(Ed448GPoint other) {
+        return this.x.equals(other.x) && this.y.equals(other.y);
     }
 
-    public Ed448GPoint opposite(Ed448GPoint a) {
-        Ed448GPoint b = new Ed448GPoint(a.x, a.y);
-        b.x = b.x.negate();
+    public boolean isOnCurve() {
+        // x^2 + y^2
+        BigInteger lhs = this.x.pow(2).add(this.y.pow(2));
+        lhs = lhs.mod(p);
+
+        // 1 + d * x^2 * y^2
+        BigInteger rhs = BigInteger.ONE.add(d.multiply(this.x.pow(2)).multiply(this.y.pow(2)));
+        rhs = rhs.mod(p);
+        return lhs.equals(rhs);
+    }
+
+    public Ed448GPoint opposite() {
+        Ed448GPoint b = new Ed448GPoint(this.x, this.y);
+        b.x = b.x.negate().mod(p);
         return b;
     }
 
     public Ed448GPoint add(Ed448GPoint b) {
         BigInteger numerator = (this.x.multiply(b.y)).add(this.y.multiply(b.x));
-        numerator = numerator.mod(this.p);
+        numerator = numerator.mod(p);
 
-        BigInteger denominator = BigInteger.ONE.add(this.d.multiply(this.x).multiply(b.x).multiply(this.y).multiply(b.y));
+        BigInteger denominator = BigInteger.ONE.add(d.multiply(this.x).multiply(b.x).multiply(this.y).multiply(b.y));
         denominator = denominator.modInverse(p);
 
         BigInteger x = (numerator.multiply(denominator)).mod(p);
 
 
         numerator = (this.y.multiply(b.y)).subtract(this.x.multiply(b.x));
-        numerator = numerator.mod(this.p);
+        numerator = numerator.mod(p);
 
-        denominator = BigInteger.ONE.subtract(this.d.multiply(this.x).multiply(b.x).multiply(this.y).multiply(b.y));
-        denominator = denominator.modInverse(this.p);
+        denominator = BigInteger.ONE.subtract(d.multiply(this.x).multiply(b.x).multiply(this.y).multiply(b.y));
+        denominator = denominator.modInverse(p);
 
         BigInteger y = (numerator.multiply(denominator)).mod(p);
 
         return new Ed448GPoint(x, y);
     }
 
-    public Ed448GPoint product(Ed448GPoint P, long k) {
+    public Ed448GPoint multiply(BigInteger s) {
         // s = (sk sk-1 ... s1 s0)2, sk = 1.
-        Ed448GPoint V = new Ed448GPoint(P.x, P.y); // initialize with sk*P, which is simply P
-
-        for (long i = k - 1; i >= 0; i--) { // scan over the k bits of s
-            V = V.add(P);       // invoke the Edwards point addition formula
-            if ((k >> i & 0x01) == 0x01) { // test the i-th bit of s
-                V = V.add(P);               // invoke the Edwards point addition formula
+        Ed448GPoint V = new Ed448GPoint();
+        Ed448GPoint temp = new Ed448GPoint(this.x, this.y); // initialize with sk*P, which is simply P
+        String bits = s.toString(2);
+        for (int i = bits.length() - 1; i >= 0; i--) { // scan over the k bits of s
+            if ((bits.charAt(i) == '1')) { // test the i-th bit of s
+                V = V.add(temp);               // invoke the Edwards point addition formula
             }
+            temp = temp.add(temp);          // invoke the Edwards point addition formula
         }
         return V;   // now finally V = s*P
     }
