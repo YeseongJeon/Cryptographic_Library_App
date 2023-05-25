@@ -1,6 +1,3 @@
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
@@ -169,6 +166,20 @@ public class Ed448GPoint {
         }
         return V;   // now finally V = s*P
     }
+
+//    public Ed448GPoint multiply(BigInteger s) {
+//        String bits = s.toString(2);
+//        Ed448GPoint res = new Ed448GPoint(this.x, this.y);
+//        for (int i = 1; i < bits.length(); i++) {
+//            res = res.add(res);
+//            if (bits.charAt(i) == '1') {
+//                res = res.add(this);
+//            }
+//        }
+//        return res;
+//    }
+
+
 
     /**
      * Converts this point to a byte array representation
