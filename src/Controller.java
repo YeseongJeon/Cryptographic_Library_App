@@ -88,7 +88,7 @@ public class Controller {
 			 m = Console.getText().getBytes();
 		 }
 
-		 byte[] hash = Main.KMACXOF256("".getBytes(), m, 512, "D".getBytes());
+		 byte[] hash = KMACXOF256.KMACXOF256("".getBytes(), m, 512, "D".getBytes());
 		 writeHash(hash);
 	 }
 
@@ -122,7 +122,7 @@ public class Controller {
 
 		 String pw = Console.getPassword();
 
-		 byte[] mac = Main.KMACXOF256(pw.getBytes(), m, 512, "T".getBytes());
+		 byte[] mac = KMACXOF256.KMACXOF256(pw.getBytes(), m, 512, "T".getBytes());
 		 writeHash(mac);
 	 }
 
@@ -131,7 +131,7 @@ public class Controller {
 		 String pw = Console.getPassword();
 		 try {
 			byte[] m = Files.readAllBytes(Paths.get(inputFileName));
-			SymmetricCryptogram crypt = Main.encryption(m, pw); // since xof has to return value, txt will contain nothing
+			SymmetricCryptogram crypt = KMACXOF256.encrypt(m, pw); // since xof has to return value, txt will contain nothing
 			 try (FileOutputStream fos = new FileOutputStream("encrypted.txt")) {
 				 fos.write(crypt.getZ());
 				 fos.write(crypt.getC());
@@ -160,7 +160,7 @@ public class Controller {
 				z = Arrays.copyOfRange(bytes, 0, 64);
 				c = Arrays.copyOfRange(bytes, 64, bytes.length - 64);
 				t = Arrays.copyOfRange(bytes, bytes.length - 64, bytes.length);
-				m = Main.decrypt(z, c, t, pw.getBytes());
+				m = KMACXOF256.decrypt(z, c, t, pw.getBytes());
 			}
 			else {
 				System.out.println("Given file does not contain a Symmetric Cryptogram");

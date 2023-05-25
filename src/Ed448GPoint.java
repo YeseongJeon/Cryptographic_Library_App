@@ -1,26 +1,41 @@
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class Ed448GPoint {
     public BigInteger x;
     public BigInteger y;
-    //public BigInteger p = new BigDecimal("7.26839E+134").toBigInteger();
+
     public static final BigInteger p = new BigInteger("2").pow(448).subtract(new BigInteger("2").pow(224)).subtract(BigInteger.ONE);
     public static final BigInteger d = new BigInteger("-39081");
     public static final BigInteger r = new BigInteger("2").pow(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885"));
 
+    /**
+     * Constructor for the neutral point (0, 1).
+     */
     public Ed448GPoint() {
         this.x = BigInteger.ZERO;
         this.y = BigInteger.ONE;
     }
 
+    /**
+     * Constructor given an x and y value.
+     * @param x value on the x-axis
+     * @param y value on the y-axis
+     */
     public Ed448GPoint(BigInteger x, BigInteger y) {
         this.x = x;
         this.y = y;
     }
 
-    // Point from x and lsb of y
-    // No clue if this is right, not sure where to find more info on this
+
+    /**
+     * Constructor given x and the least significant bit of y
+     * @param x value on the x-axis
+     * @param lsb least significant bit of y
+     */
     public Ed448GPoint(BigInteger x, boolean lsb) {
         this.x = x;
 
@@ -38,6 +53,18 @@ public class Ed448GPoint {
 
         this.y = sqrt(radicand, p, lsb);
 
+    }
+
+    /**
+     * Generates a point from a byte representation of x and y
+     * @param bytes a byte representation of x and y
+     * @return an Ed448GPoint from the given bytes
+     */
+    public static Ed448GPoint pointFromBytes(byte[] bytes) {
+        byte[] xBytes = Arrays.copyOfRange(bytes, 0, bytes.length - 1);
+        byte yByte = bytes[bytes.length - 1];
+        boolean lsb = yByte == 1;
+        return new Ed448GPoint(new BigInteger(xBytes), lsb);
     }
 
     /**
@@ -62,10 +89,19 @@ public class Ed448GPoint {
         return (r.multiply(r).subtract(v).mod(p).signum() == 0) ? r : null;
     }
 
+    /**
+     * Checks if this point equals another point.
+     * @param other an Ed448GPoint
+     * @return True if they are equal, otherwise false.
+     */
     public boolean equals(Ed448GPoint other) {
         return this.x.equals(other.x) && this.y.equals(other.y);
     }
 
+    /**
+     * Checks if this point is on the elliptic curve.
+     * @return True if this point is on the curve, otherwise false.
+     */
     public boolean isOnCurve() {
         // x^2 + y^2
         BigInteger lhs = this.x.pow(2).add(this.y.pow(2));
@@ -77,12 +113,21 @@ public class Ed448GPoint {
         return lhs.equals(rhs);
     }
 
+    /**
+     * Gives the negation of this point
+     * @return the negation of this point
+     */
     public Ed448GPoint opposite() {
         Ed448GPoint b = new Ed448GPoint(this.x, this.y);
         b.x = b.x.negate().mod(p);
         return b;
     }
 
+    /**
+     * Adds two points together.
+     * @param b another point
+     * @return the sum of the two points
+     */
     public Ed448GPoint add(Ed448GPoint b) {
         BigInteger numerator = (this.x.multiply(b.y)).add(this.y.multiply(b.x));
         numerator = numerator.mod(p);
@@ -104,6 +149,13 @@ public class Ed448GPoint {
         return new Ed448GPoint(x, y);
     }
 
+    /**
+     * Multiplies this point with a given scalar s.
+     * Implemented from the pseudocode for Double-and-add, Iterative algorithm, index increasing from this page:
+     * https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
+     * @param s a scalar
+     * @return the product of this point and the given scalar s
+     */
     public Ed448GPoint multiply(BigInteger s) {
         // s = (sk sk-1 ... s1 s0)2, sk = 1.
         Ed448GPoint V = new Ed448GPoint();
@@ -116,6 +168,22 @@ public class Ed448GPoint {
             temp = temp.add(temp);          // invoke the Edwards point addition formula
         }
         return V;   // now finally V = s*P
+    }
+
+    /**
+     * Converts this point to a byte array representation
+     * @return a byte array representation of this point
+     */
+    public byte[] getBytes() {
+        byte[] xBytes = this.x.toByteArray();
+        byte[] zeroPad = new byte[57 - xBytes.length];
+        Arrays.fill(zeroPad, (byte)0);
+        byte[] yByte = new byte[1];
+        yByte[0] = this.y.mod(BigInteger.TWO).equals(BigInteger.ZERO) ? (byte) 0 : (byte) 1;
+        byte[] bytes = Main.concat(zeroPad, xBytes);
+        bytes = Main.concat(bytes, yByte);
+
+        return bytes;
     }
 
 }

@@ -55,7 +55,7 @@ public class SHAKE {
         this.rsiz = 136;
         this.pt = 0;
 
-        byte[] NS = concat(encode_string("KMAC".getBytes()), encode_string(S));
+        byte[] NS = Main.concat(encode_string("KMAC".getBytes()), encode_string(S));
         NS = bytepad(NS, 136);
         update(NS, NS.length);
 
@@ -162,16 +162,7 @@ public class SHAKE {
         assert len <  Math.pow(2, 2040);
 
         byte[] lenS = left_encode(len * 8L);
-        return concat(lenS, S);
-    }
-
-    public static byte[] concat(byte[] s1, byte[] s2){
-        int s1Len = s1.length;
-        int s2Len = s2.length;
-        byte[] concatS = new byte[s1Len + s2Len];
-        System.arraycopy(s1, 0, concatS,0, s1Len);
-        System.arraycopy(s2, 0, concatS, s1Len, s2Len);
-        return concatS;
+        return Main.concat(lenS, S);
     }
 
     /**
