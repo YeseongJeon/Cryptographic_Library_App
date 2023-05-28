@@ -22,58 +22,142 @@ public class Controller {
 		 while (true) {
 			 Console.printMainScreen();
 			 final String mainInput = Console.inputMain();
-
 			 switch (mainInput) {
 				 case "1":
-					 System.out.println(">> Option 1:\"Compute a plain cryptographic hash\" selected");
+					 System.out.println(">> Option 1:\"Generate a (Schnorr/DHIS) key pair\" selected");
 					 choice = 1;
-					 computeOption();
+					 System.out.println("\n- Requirement 1: Password -");
+					 options();
 					 break;
 				 case "2":
-					 System.out.println(">> Option 2:\"Compute a MAC under a given passphrase\" selected");
+					 System.out.println(">> Option 2:\"Encrypt a given data file asymmetrically\" selected");
 					 choice = 2;
-					 computeOption();
+					 System.out.println("\n- Requirement 1: Message -");
+					 options();
 					 break;
 				 case "3":
-					 System.out.println(">> Option 3:\"Encrypt a given data file symmetrically\" selected");
-					 encrypt();
-					 break;
-				 case "4":
-					 System.out.println(">> Option 4:\"Decrypt a given data file symmetrically\" selected");
+					 System.out.println(">> Option 3:\"Decrypt a given data file asymmetrically\" selected"); 
 					 decrypt();
 					 break;
+				 case "4":
+					 System.out.println(">> Option 4:\"Generate a signature\" selected");
+					 choice = 4;
+					 System.out.println("\n- Requirement 1: Message -");
+					 options();
+					 break;
 				 case "5":
+					 System.out.println(">> Option 5:\"Verify a signature\" selected");
+					 verify();
+					 break;
+				 case "6":
 					 return;
 			 }
 			 System.out.println();
 		 }
 	 }
 	 
-	 public static void computeOption(){
-		 Console.printComputeOptionScreen();
-		 final String optionInput = Console.inputComputeOption();
+	 public static void options(){
+		 Console.printOptionScreen();
+		 final String optionInput = Console.inputOption();
 		 
 	     switch (optionInput) {
             case "a":
                 System.out.println(">> Option a:\"Enter a file\" selected");
                 if(choice == 1) {
-                	computeTextPlain(true);
+                	generateKeyPair(true);
                 }else if(choice == 2) {
-                	computeMAC(true);
+                	encryptUnderKey(true);
+                }else if(choice == 4) {
+                	generateSignature(true);
                 }
                 break;
             case "b":       
                 System.out.println(">> Option b:\"Enter text directly\" selected");
                 if(choice == 1) {
-                	computeTextPlain(false);
+                	generateKeyPair(false);
                 }else if(choice == 2) {
-                	computeMAC(false);
+                	encryptUnderKey(false);
+                }else if(choice == 4) {
+                	generateSignature(false);
                 }
                 break;
         }
 	 }
+	 
+	 public static void generateKeyPair(boolean file){ //1. Generate a (Schnorr/DHIS) key pair
+		 String pw = null;
+		 if (file) {
+			 try {
+				 String fileName = Console.getFileName();
+				 pw = Files.readString(Paths.get(fileName));
+			 } catch (IOException e) {
+				 System.out.println("!The file does not exist!");
+				 generateKeyPair(true);
+			 }
+		 }
+		 else {
+			pw = Console.getPassword();
+		 }
+		 
+		 KeyPair key = SchnorrDHIES.keyPair(pw);
+		 writeBytesPublicKey(key.publicKey.getBytes());
+		 writeBytesPrivateKey(key.privateKey);
+	 }
+	 
+	 public static void encryptUnderKey(boolean file){ //2. Encrypt a given data file under the(Schnorr/DHIES) public key
+		 byte[] m = {};
+		 byte[] kByte = {};
+		 Ed448GPoint key = new Ed448GPoint();
+		 
+		 if (file) {
+			 try {
+				 String fileName = Console.getFileName();
+				 m = Files.readAllBytes(Paths.get(fileName));
+				 System.out.println("\n- Requirement 2: Key File -");
+				 String fileNameKey = Console.getFileName();
+				 kByte = Files.readAllBytes(Paths.get(fileNameKey));
+				 key = Ed448GPoint.pointFromBytes(kByte);
+			 } catch (IOException e) {
+				 System.out.println("!The file does not exist!");
+				 encryptUnderKey(true);
+			 }
+		 }
+		 else {
+			 m = Console.getText().getBytes();
+			 System.out.println("\n- Requirement 2: Key File -");
+			 String fileNameKey = Console.getFileName();
+			 try {
+				 kByte = Files.readAllBytes(Paths.get(fileNameKey));
+				 key = Ed448GPoint.pointFromBytes(kByte);
+			} catch (IOException e) {
+				System.out.println("!The file does not exist!");
+				encryptUnderKey(false);
+			}
+		 }
+		 
+		 byte [] mEncrypted = SchnorrDHIES.encrypt(m, key);
+		 writeBytesEncrypted(mEncrypted);
+	 }
 
-	 public static void computeTextPlain(boolean file){ //Compute plain cryptographic hash of a text
+	 public static void decrypt() { //3. Decrypt a given data file asymmetrically. 
+		 byte[] m = {};
+		 try {
+			 System.out.println("\n- Requirement 1: Encrypted Message File -");
+			 String fileName = Console.getFileName();
+			 m = Files.readAllBytes(Paths.get(fileName));
+		 } catch (IOException e) {
+			 System.out.println("!The file does not exist!");
+			 decrypt();
+		 }
+		 
+		 System.out.println("\n- Requirement 2: Password -");
+		 String pw = Console.getPassword();
+		 byte[] decrypted = SchnorrDHIES.decrypt(m, pw); 
+		 String s = new String(decrypted, StandardCharsets.UTF_8);
+		 System.out.println(s);
+	 }
+
+	 public static void generateSignature(boolean file){ //4. Generate a signature
 		 byte[] m = {};
 		 if (file) {
 			 try {
@@ -81,106 +165,97 @@ public class Controller {
 				 m = Files.readAllBytes(Paths.get(fileName));
 			 } catch (IOException e) {
 				 System.out.println("!The file does not exist!");
-				 computeTextPlain(true);
+				 generateSignature(true);
 			 }
 		 }
 		 else {
 			 m = Console.getText().getBytes();
 		 }
-
-		 byte[] hash = KMACXOF256.KMACXOF256("".getBytes(), m, 512, "D".getBytes());
-		 writeHash(hash);
+		 
+		 System.out.println("\n- Requirement 2: Password -");
+		 String pw = Console.getPassword();
+		 byte[] signature = SchnorrDHIES.sign(m, pw); 
+		 writeBytesSign(signature);
 	 }
+	 
+	 
+	 public static void verify(){ //5. Verify a signature
+		 byte[] m = {};
+		 byte[] signature = {};
+		 byte[] kByte = {};
+		 
+		 Ed448GPoint v = new Ed448GPoint();
+		 
+		 try {
+			 
+			 System.out.println("\n- Requirement 1: Message File -");
+			 String fileName = Console.getFileName();
+			 m = Files.readAllBytes(Paths.get(fileName));
+			 
+			 System.out.println("\n- Requirement 2: Signature File -");
+			 String fileNameSignature = Console.getFileName();
+			 signature = Files.readAllBytes(Paths.get(fileNameSignature));
+			 
+			 System.out.println("\n- Requirement 3: Public Key File -");
+			 String fileNamePublicKey = Console.getFileName();
+			 kByte = Files.readAllBytes(Paths.get(fileNamePublicKey));
+			 v = Ed448GPoint.pointFromBytes(kByte);
+			 
+		 } catch (IOException e) {
+			 System.out.println("!The file does not exist!");
+			 verify();
+		 }
 
-	 private static void writeHash(byte[] hash) {
-		 try (FileOutputStream fos = new FileOutputStream("encrypted.txt")) {
-			 fos.write(hash);
+		 boolean verify = SchnorrDHIES.verify(signature, m, v);
+		 
+		 if(verify) {
+			 System.out.println("It is a valid signature");
+		 }else if(!verify) {
+			 System.out.println("It is an invalid signature");
+		 }
+	 }
+	 
+	 private static void writeBytesPublicKey(byte[] bytes) {
+		 try (FileOutputStream fos = new FileOutputStream("publicKey.txt")) {
+			 fos.write(bytes);
 		 }
 		 catch (IOException ioe) { System.out.println("Could not write hash to file"); }
-		 for (byte b : hash) {
+		 for (byte b : bytes) {
 			 System.out.printf("%02X ", b);
 		 }
 		 System.out.println();
 	 }
 	 
-	 public static void computeMAC(boolean file){ //Compute a MAC of a text from a given file under a given passphrase
-		 System.out.println("***chose number 2 insert file***");
-
-		 byte[] m = {};
-		 if (file) {
-			 try {
-				 String fileName = Console.getFileName();
-				 m = Files.readAllBytes(Paths.get(fileName));
-			 } catch (IOException e) {
-				 System.out.println("!The file does not exist!");
-				 computeMAC(true);
-			 }
+	 private static void writeBytesPrivateKey(byte[] bytes) {
+		 try (FileOutputStream fos = new FileOutputStream("privateKey.txt")) {
+			 fos.write(bytes);
 		 }
-		 else {
-			 m = Console.getText().getBytes();
+		 catch (IOException ioe) { System.out.println("Could not write hash to file"); }
+		 for (byte b : bytes) {
+			 System.out.printf("%02X ", b);
 		 }
-
-		 String pw = Console.getPassword();
-
-		 byte[] mac = KMACXOF256.KMACXOF256(pw.getBytes(), m, 512, "T".getBytes());
-		 writeHash(mac);
-	 }
-
-	 public static void encrypt() {
-		 String inputFileName = Console.getFileName();
-		 String pw = Console.getPassword();
-		 try {
-			byte[] m = Files.readAllBytes(Paths.get(inputFileName));
-			SymmetricCryptogram crypt = KMACXOF256.encrypt(m, pw); // since xof has to return value, txt will contain nothing
-			 try (FileOutputStream fos = new FileOutputStream("encrypted.txt")) {
-				 fos.write(crypt.getZ());
-				 fos.write(crypt.getC());
-				 fos.write(crypt.getT());
-			 }
-		} catch (IOException e) {
-			 System.out.println("!The file does not exist!");
-			 encrypt();
-		}
+		 System.out.println();
 	 }
 	 
-	 public static void decrypt() {
-		 // get the text from the input file
-		 // let user to out pw through the console
-		 // decrypt.
-		 
-		 String inputFileName = Console.getFileName();
-		 String pw = Console.getPassword();
-		 byte[] z;
-		 byte[] c;
-		 byte[] t;
-		 byte[] m = {};
-		 try {
-			byte[] bytes = Files.readAllBytes(Paths.get(inputFileName));
-			if (bytes.length > 128) {
-				z = Arrays.copyOfRange(bytes, 0, 64);
-				c = Arrays.copyOfRange(bytes, 64, bytes.length - 64);
-				t = Arrays.copyOfRange(bytes, bytes.length - 64, bytes.length);
-				m = KMACXOF256.decrypt(z, c, t, pw.getBytes());
-			}
-			else {
-				System.out.println("Given file does not contain a Symmetric Cryptogram");
-				return;
-			}
-
-			if (m != null) {
-				try (FileOutputStream fos = new FileOutputStream("decrypted.txt")) {
-					fos.write(m);
-				} catch (IOException ioe) {
-					System.out.println("Could not write hash to file");
-				}
-
-				String s = new String(m, StandardCharsets.UTF_8);
-				System.out.println(s);
-			}
-
-		} catch (IOException e) {
-			System.out.println("!The file does not exist!");
-		}
+	 private static void writeBytesEncrypted(byte[] bytes) {
+		 try (FileOutputStream fos = new FileOutputStream("encrypted.txt")) {
+			 fos.write(bytes);
+		 }
+		 catch (IOException ioe) { System.out.println("Could not write hash to file"); }
+		 for (byte b : bytes) {
+			 System.out.printf("%02X ", b);
+		 }
+		 System.out.println();
 	 }
 	 
+	 private static void writeBytesSign(byte[] bytes) {
+		 try (FileOutputStream fos = new FileOutputStream("signature.txt")) {
+			 fos.write(bytes);
+		 }
+		 catch (IOException ioe) { System.out.println("Could not write hash to file"); }
+		 for (byte b : bytes) {
+			 System.out.printf("%02X ", b);
+		 }
+		 System.out.println();
+	 }
 }
