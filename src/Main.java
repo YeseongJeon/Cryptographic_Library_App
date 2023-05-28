@@ -14,18 +14,8 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
         //Controller.start();
-        Ed448GPoint G = new Ed448GPoint(Ed448GPoint.p.subtract(BigInteger.ONE), true);
-        if (G.isOnCurve()) {
-            //G = G.multiply(Ed448GPoint.r);
-            byte[] gBytes = G.getBytes();
-            Ed448GPoint S = Ed448GPoint.pointFromBytes(gBytes);
-            if (G.equals(S)) {
-                System.out.println("Test Passed");
-            }
-            else {
-                System.out.println("Test Failed");
-            }
-        }
+        BigInteger r = Ed448GPoint.r;
+        System.out.println(r);
     }
 
     public static byte[] concat(byte[] s1, byte[] s2){

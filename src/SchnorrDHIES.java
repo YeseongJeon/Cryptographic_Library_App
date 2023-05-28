@@ -135,14 +135,14 @@ public class SchnorrDHIES {
     public static boolean verify(byte[] signature, byte[] m, Ed448GPoint V) {
         byte[] h = Arrays.copyOfRange(signature, 0, 64);
         byte[] z = Arrays.copyOfRange(signature, 64, signature.length);
-        BigInteger H = new BigInteger(h);
+
         // U <- z*G + h*V
         Ed448GPoint U = G.multiply(new BigInteger(z)).add(V.multiply(H));
 
         // accept if, and only if, KMACXOF256(Ux, m, 512, “T”) = h
-        BigInteger check = new BigInteger(KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes()));
+        byte[] check = KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes());
 
-        return check.equals(H);
+        return Arrays.equals(h, check);
     }
 
 }
