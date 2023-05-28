@@ -6,7 +6,6 @@
  * Some code borrowed from Professor Paulo Barreto
  */
 
-
 import java.util.*;
 
 public class Console {
@@ -14,7 +13,7 @@ public class Console {
 
 	public static void printHeader() {
 		System.out.println("\n"
-				+ "				  <Practical project - cryptographic library & app - part 1>						\n"
+				+ "				  <Practical project - cryptographic library & app - part 2>						\n"
 				+ "											  	 	 By Justin Goding, Andrew Lau, and Yeseong Jeon");
 
 		System.out.println();
@@ -23,17 +22,18 @@ public class Console {
 	 public static void printMainScreen() {
 	        System.out.println("Enter a number to choose an option below: ");
 	        System.out.println("---------------------------------------------------------");
-	        System.out.println("1. Compute a plain cryptographic hash");
-	        System.out.println("2. Compute a MAC under a given passphrase");
-	        System.out.println("3. Encrypt a given data file symmetrically");
-	        System.out.println("4. Decrypt a given data file symmetrically");
-		 	System.out.println("5. Exit");
+	        System.out.println("1. Generate a (Schnorr/DHIS) key pair");
+	        System.out.println("2. Encrypt a given data file asymmetrically");
+	        System.out.println("3. Decrypt a given data file asymmetrically");
+	        System.out.println("4. Generate a signature");
+		 	System.out.println("5. Verify a signature");
+			System.out.println("6. Exit");
 	        System.out.println("---------------------------------------------------------");
 	 }
 	 
-	 public static void printComputeOptionScreen() {
+	 public static void printOptionScreen() {
 		 System.out.println();
-		 System.out.println("Choose a computing option below: ");
+		 System.out.println("Choose a option below: ");
 		 System.out.println("----------------------");
 		 System.out.println("a. Enter a file");
 		 System.out.println("b. Enter text directly");
@@ -68,9 +68,9 @@ public class Console {
 	  */
 	 public static String inputMain() {
 		 String mainInput = sc.next();
-		 final Set<String> set = new HashSet<>(Arrays.asList("1", "2", "3", "4", "5"));
+		 final Set<String> set = new HashSet<>(Arrays.asList("1", "2", "3", "4", "5", "6"));
 		 while (!set.contains(mainInput)) {
-			 System.out.println("!WRONG INPUT, TRY AGAIN by entering a number between 1 and 4!");
+			 System.out.println("!WRONG INPUT, TRY AGAIN by entering a number between 1 and 6!");
 			 mainInput = sc.next();
 		 }
 		 return mainInput;
@@ -82,7 +82,7 @@ public class Console {
 	  * 
 	  * @return computeOptionInput
 	  */
-	 public static String inputComputeOption() {
+	 public static String inputOption() {
 		 String computeOptionInput = sc.next();
 		 final Set<String> options = new HashSet<>(Arrays.asList("a", "b"));
 		 while (!options.contains(computeOptionInput)) {
