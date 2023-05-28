@@ -7,7 +7,7 @@ public class Ed448GPoint {
 
     public static final BigInteger p = new BigInteger("2").pow(448).subtract(new BigInteger("2").pow(224)).subtract(BigInteger.ONE);
     public static final BigInteger d = new BigInteger("-39081");
-    public static final BigInteger r = new BigInteger("4").multiply(new BigInteger("2").pow(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885")));
+    public static final BigInteger n = new BigInteger("4").multiply(new BigInteger("2").pow(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885")));
 
     /**
      * Constructor for the neutral point (0, 1).

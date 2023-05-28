@@ -14,8 +14,15 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
         //Controller.start();
-        BigInteger r = Ed448GPoint.r;
-        System.out.println(r);
+        KeyPair pair = SchnorrDHIES.keyPair("password");
+        byte[] signature = SchnorrDHIES.sign("message".getBytes(), "password");
+        boolean verification = SchnorrDHIES.verify(signature, "message".getBytes(), pair.publicKey);
+        if (verification) {
+            System.out.println("Test Passed");
+        }
+        else {
+            System.out.println("Test Failed");
+        }
     }
 
     public static byte[] concat(byte[] s1, byte[] s2){

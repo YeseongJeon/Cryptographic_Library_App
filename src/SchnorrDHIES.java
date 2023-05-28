@@ -1,5 +1,3 @@
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -120,7 +118,9 @@ public class SchnorrDHIES {
 
         //h <- KMACXOF256(Ux, m, 512, “T”); z <- (k – hs) mod r
         byte[] h = KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes());
-        BigInteger z = K.subtract(new BigInteger(h).multiply(S)).mod(Ed448GPoint.r);
+        BigInteger H = new BigInteger(h).mod(Ed448GPoint.n);
+        BigInteger z = K.subtract(H.multiply(S)).mod(Ed448GPoint.n);
+
         //signature: (h, z)
         return Main.concat(h, z.toByteArray());
     }
@@ -135,7 +135,7 @@ public class SchnorrDHIES {
     public static boolean verify(byte[] signature, byte[] m, Ed448GPoint V) {
         byte[] h = Arrays.copyOfRange(signature, 0, 64);
         byte[] z = Arrays.copyOfRange(signature, 64, signature.length);
-
+        BigInteger H = new BigInteger(h);
         // U <- z*G + h*V
         Ed448GPoint U = G.multiply(new BigInteger(z)).add(V.multiply(H));
 

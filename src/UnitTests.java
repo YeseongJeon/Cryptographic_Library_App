@@ -1,6 +1,6 @@
 import org.junit.*;
 import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class UnitTests {
@@ -47,7 +47,7 @@ public class UnitTests {
     // r * G == O
     @Test
     public void testMultiplyByR() {
-        Ed448GPoint lhs = G.multiply(Ed448GPoint.r);
+        Ed448GPoint lhs = G.multiply(Ed448GPoint.n);
         Assert.assertTrue(lhs.equals(new Ed448GPoint()));
     }
 
@@ -59,7 +59,7 @@ public class UnitTests {
         for (int i = 0; i < randomTests; i++) {
             BigInteger k = new BigInteger(448, new Random());
             Ed448GPoint lhs = G.multiply(k);
-            Ed448GPoint rhs = G.multiply(k.mod(Ed448GPoint.r));
+            Ed448GPoint rhs = G.multiply(k.mod(Ed448GPoint.n));
             if (rhs.equals(lhs)) { passed++; }
         }
         Assert.assertEquals(randomTests, passed);
@@ -104,11 +104,29 @@ public class UnitTests {
             BigInteger t = new BigInteger(448, new Random());
             Ed448GPoint lhs = G.multiply(t).multiply(k);
             Ed448GPoint middle = G.multiply(k).multiply(t);
-            Ed448GPoint rhs = G.multiply(k.multiply(t).mod(Ed448GPoint.r));
+            Ed448GPoint rhs = G.multiply(k.multiply(t).mod(Ed448GPoint.n));
             if (lhs.equals(middle) && middle.equals(rhs)) {
                 passed++;
             }
         }
         Assert.assertEquals(randomTests, passed);
     }
+
+    @Test
+    public void testEncryptDecrypt() {
+        KeyPair pair = SchnorrDHIES.keyPair("password");
+        byte[] encrypted = SchnorrDHIES.encrypt("message".getBytes(), pair.publicKey);
+        byte[] decrypted = SchnorrDHIES.decrypt(encrypted, "password");
+        String message = new String(decrypted, StandardCharsets.UTF_8);
+        Assert.assertEquals("message", message);
+    }
+
+    @Test
+    public void testSignature() {
+        KeyPair pair = SchnorrDHIES.keyPair("password");
+        byte[] signature = SchnorrDHIES.sign("message".getBytes(), "password");
+        boolean verification = SchnorrDHIES.verify(signature, "message".getBytes(), pair.publicKey);
+        Assert.assertTrue(verification);
+    }
+
 }
