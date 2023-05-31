@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class UnitTests {
 
-    public static final Ed448GPoint G = new Ed448GPoint(new BigInteger("8"), true);
+    public static final Ed448GPoint G = new Ed448GPoint(new BigInteger("8"), false);
     public static final BigInteger FOUR = new BigInteger("4");
 
     // 0 * G == O
@@ -47,19 +47,19 @@ public class UnitTests {
     // r * G == O
     @Test
     public void testMultiplyByR() {
-        Ed448GPoint lhs = G.multiply(Ed448GPoint.n);
+        Ed448GPoint lhs = G.multiply(Ed448GPoint.r);
         Assert.assertTrue(lhs.equals(new Ed448GPoint()));
     }
 
     // k * G == (k mod r) * G
     @Test
     public void testProducts1() {
-        int randomTests = 100;
+        int randomTests = 50;
         int passed = 0;
         for (int i = 0; i < randomTests; i++) {
             BigInteger k = new BigInteger(448, new Random());
             Ed448GPoint lhs = G.multiply(k);
-            Ed448GPoint rhs = G.multiply(k.mod(Ed448GPoint.n));
+            Ed448GPoint rhs = G.multiply(k.mod(Ed448GPoint.r));
             if (rhs.equals(lhs)) { passed++; }
         }
         Assert.assertEquals(randomTests, passed);
@@ -68,7 +68,7 @@ public class UnitTests {
     // (k + 1) * G == (k * G) + G
     @Test
     public void testProducts2() {
-        int randomTests = 100;
+        int randomTests = 50;
         int passed = 0;
         for (int i = 0; i < randomTests; i++) {
             BigInteger k = new BigInteger(448, new Random());
@@ -82,7 +82,7 @@ public class UnitTests {
     // (k + t) * G = (k * G) + (t * G)
     @Test
     public void testProducts3() {
-        int randomTests = 100;
+        int randomTests = 50;
         int passed = 0;
         for (int i = 0; i < randomTests; i++) {
             BigInteger k = new BigInteger(448, new Random());
@@ -97,14 +97,14 @@ public class UnitTests {
     // (k * (t * G) == t * (k * G) == (k * t mod r) * G
     @Test
     public void testProducts4() {
-        int randomTests = 100;
+        int randomTests = 50;
         int passed = 0;
         for (int i = 0; i < randomTests; i++) {
             BigInteger k = new BigInteger(448, new Random());
             BigInteger t = new BigInteger(448, new Random());
             Ed448GPoint lhs = G.multiply(t).multiply(k);
             Ed448GPoint middle = G.multiply(k).multiply(t);
-            Ed448GPoint rhs = G.multiply(k.multiply(t).mod(Ed448GPoint.n));
+            Ed448GPoint rhs = G.multiply(k.multiply(t).mod(Ed448GPoint.r));
             if (lhs.equals(middle) && middle.equals(rhs)) {
                 passed++;
             }

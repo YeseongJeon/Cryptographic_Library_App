@@ -7,7 +7,7 @@ public class Ed448GPoint {
 
     public static final BigInteger p = new BigInteger("2").pow(448).subtract(new BigInteger("2").pow(224)).subtract(BigInteger.ONE);
     public static final BigInteger d = new BigInteger("-39081");
-    public static final BigInteger n = new BigInteger("4").multiply(new BigInteger("2").pow(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885")));
+    public static final BigInteger r = new BigInteger("2").pow(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885"));
 
     /**
      * Constructor for the neutral point (0, 1).
@@ -166,20 +166,6 @@ public class Ed448GPoint {
         }
         return V;   // now finally V = s*P
     }
-
-//    public Ed448GPoint multiply(BigInteger s) {
-//        String bits = s.toString(2);
-//        Ed448GPoint res = new Ed448GPoint(this.x, this.y);
-//        for (int i = 1; i < bits.length(); i++) {
-//            res = res.add(res);
-//            if (bits.charAt(i) == '1') {
-//                res = res.add(this);
-//            }
-//        }
-//        return res;
-//    }
-
-
 
     /**
      * Converts this point to a byte array representation

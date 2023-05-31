@@ -3,7 +3,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class SchnorrDHIES {
-    public static final Ed448GPoint G = new Ed448GPoint(new BigInteger("8"), true);
+    public static final Ed448GPoint G = new Ed448GPoint(new BigInteger("8"), false);
 
     /**
      * Generate an elliptic key pair from a given passphrase.
@@ -13,7 +13,7 @@ public class SchnorrDHIES {
     public static KeyPair keyPair(String pw) {
         // s <- KMACXOF256(pw, “”, 512, “SK”); s <- 4s
         byte[] s = KMACXOF256.KMACXOF256(pw.getBytes(), "".getBytes(), 512, "SK".getBytes());
-        BigInteger S = new BigInteger(s).multiply(new BigInteger("4"));
+        BigInteger S = new BigInteger(s).shiftLeft(2).mod(Ed448GPoint.r);
 
         // V <- s*G
         Ed448GPoint V = G.multiply(S);
@@ -33,7 +33,7 @@ public class SchnorrDHIES {
         SecureRandom sr = new SecureRandom();
         byte[] k = new byte[64];
         sr.nextBytes(k);
-        BigInteger K = new BigInteger(k).multiply(new BigInteger("4"));
+        BigInteger K = new BigInteger(k).shiftLeft(2).mod(Ed448GPoint.r);;
 
         // W <- k*V; Z <- k*G
         Ed448GPoint W = V.multiply(K);
@@ -71,7 +71,7 @@ public class SchnorrDHIES {
 
         // s <- KMACXOF256(pw, “”, 512, “SK”); s <- 4s
         byte[] s = KMACXOF256.KMACXOF256(pw.getBytes(), "".getBytes(), 512, "SK".getBytes());
-        BigInteger S = new BigInteger(s).multiply(new BigInteger("4"));
+        BigInteger S = new BigInteger(s).shiftLeft(2).mod(Ed448GPoint.r);;
 
         // W <- s*Z
         Ed448GPoint W = Z.multiply(S);
@@ -106,23 +106,28 @@ public class SchnorrDHIES {
      */
     public static byte[] sign(byte[] m, String pw) {
         // s <- KMACXOF256(pw, “”, 512, “SK”); s <- 4s
-        byte[] s = KMACXOF256.KMACXOF256(pw.getBytes(), "".getBytes(), 512, "SK".getBytes());
-        BigInteger S = new BigInteger(s).multiply(new BigInteger("4"));
+        BigInteger s = new BigInteger(KMACXOF256.KMACXOF256(pw.getBytes(), "".getBytes(), 512, "SK".getBytes()));
+        s = s.shiftLeft(2).mod(Ed448GPoint.r);
 
         //k <- KMACXOF256(s, m, 512, “N”); k <- 4k
-        byte[] k = KMACXOF256.KMACXOF256(S.toByteArray(), m, 512, "N".getBytes());
-        BigInteger K = new BigInteger(k).multiply(new BigInteger("4"));
+        BigInteger k = new BigInteger(KMACXOF256.KMACXOF256(s.toByteArray(), m, 512, "N".getBytes()));
+        k = k.shiftLeft(2).mod(Ed448GPoint.r);
 
         //U <- k*G;
-        Ed448GPoint U = G.multiply(K);
+        Ed448GPoint U = G.multiply(k);
 
         //h <- KMACXOF256(Ux, m, 512, “T”); z <- (k – hs) mod r
-        byte[] h = KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes());
-        BigInteger H = new BigInteger(h).mod(Ed448GPoint.n);
-        BigInteger z = K.subtract(H.multiply(S)).mod(Ed448GPoint.n);
+        BigInteger h = new BigInteger(KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes()));
+        h = h.mod(Ed448GPoint.r);
+        BigInteger z = k.subtract(h.multiply(s)).mod(Ed448GPoint.r);
 
         //signature: (h, z)
-        return Main.concat(h, z.toByteArray());
+        byte[] hBytes = h.toByteArray();
+        byte[] pad = new byte[64 - hBytes.length];
+        Arrays.fill(pad, (byte)0);
+        hBytes = Main.concat(pad, hBytes);
+
+        return Main.concat(hBytes, z.toByteArray());
     }
 
     /**
@@ -133,16 +138,17 @@ public class SchnorrDHIES {
      * @return True if the signature is valid, otherwise false
      */
     public static boolean verify(byte[] signature, byte[] m, Ed448GPoint V) {
-        byte[] h = Arrays.copyOfRange(signature, 0, 64);
-        byte[] z = Arrays.copyOfRange(signature, 64, signature.length);
-        BigInteger H = new BigInteger(h);
+        BigInteger h = new BigInteger(Arrays.copyOfRange(signature, 0, 64));
+        BigInteger z = new BigInteger(Arrays.copyOfRange(signature, 64, signature.length));
+
         // U <- z*G + h*V
-        Ed448GPoint U = G.multiply(new BigInteger(z)).add(V.multiply(H));
+        Ed448GPoint U = G.multiply(z).add(V.multiply(h));
 
         // accept if, and only if, KMACXOF256(Ux, m, 512, “T”) = h
-        byte[] check = KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes());
+        BigInteger check = new BigInteger(KMACXOF256.KMACXOF256(U.x.toByteArray(), m, 512, "T".getBytes())).mod(Ed448GPoint.r);
 
-        return Arrays.equals(h, check);
+
+        return h.equals(check);
     }
 
 }
