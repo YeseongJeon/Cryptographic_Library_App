@@ -1,3 +1,8 @@
+/**
+ * Edwards Elliptic Curve points and arithmetic
+ * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ */
+
 import java.math.BigInteger;
 import java.util.Arrays;
 
@@ -100,6 +105,10 @@ public class Ed448GPoint {
      * @return True if this point is on the curve, otherwise false.
      */
     public boolean isOnCurve() {
+        if (this.x == null || this.y == null) {
+            return false;
+        }
+
         // x^2 + y^2
         BigInteger lhs = this.x.pow(2).add(this.y.pow(2));
         lhs = lhs.mod(p);

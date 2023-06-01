@@ -1,27 +1,30 @@
 /**
- * SHA-3 derived functions and Keccak sponge for the purpose of implementing KMACXOF256
+ * Application offering functionality for KMACXOF256 symmetric encryption and hashing
+ * along with Schnorr/DHIES asymmetric encryption and signatures
  * @author Justin Goding, Yeseong Jeon, Andrew Lau
  * Some code borrowed from/inspired by Markku-Juhani Saarinen's C implementation of SHA-3
  * functions at https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
  * Some code borrowed from Professor Paulo Barreto
  */
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Random;
-
 public class Main {
 
-    public static void main(String args[]) throws IOException {
-        //Controller.start();
-        KeyPair pair = SchnorrDHIES.keyPair("password");
-        byte[] signature = SchnorrDHIES.sign("message".getBytes(), "password");
-        boolean verification = SchnorrDHIES.verify(signature, "message".getBytes(), pair.publicKey);
-        if (verification) {
-            System.out.println("Test Passed");
-        }
-        else {
-            System.out.println("Test Failed");
+    public static void main(String[] args)  {
+        boolean running = true;
+        while (running) {
+            Console.printHeader();
+            final String mainInput = Console.inputMain(3);
+            switch (mainInput) {
+                case "1":
+                    Symmetric.start();
+                    break;
+                case "2":
+                    Asymmetric.start();
+                    break;
+                case "3":
+                    running = false;
+                    break;
+            }
         }
     }
 

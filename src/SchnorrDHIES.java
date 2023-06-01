@@ -1,3 +1,9 @@
+/**
+ * Schnorr/DHIES encryption and signing with Edwards Elliptic Curve
+ * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * Some code borrowed from Professor Paulo Barreto
+ */
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -64,10 +70,19 @@ public class SchnorrDHIES {
      * @return a decrypted message
      */
     public static byte[] decrypt(byte[] cryptogram, String pw) {
+        if (cryptogram.length < 123) {
+            System.out.println("File does not contain a cryptogram");
+            return null;
+        }
+
         byte[] z = Arrays.copyOfRange(cryptogram, 0, 58);
         byte[] c = Arrays.copyOfRange(cryptogram, 58, cryptogram.length - 64);
         byte[] t = Arrays.copyOfRange(cryptogram, cryptogram.length - 64, cryptogram.length);
         Ed448GPoint Z = Ed448GPoint.pointFromBytes(z);
+        if (!Z.isOnCurve()) {
+            System.out.println("File does not contain a valid cryptogram");
+            return null;
+        }
 
         // s <- KMACXOF256(pw, “”, 512, “SK”); s <- 4s
         byte[] s = KMACXOF256.KMACXOF256(pw.getBytes(), "".getBytes(), 512, "SK".getBytes());
@@ -93,7 +108,7 @@ public class SchnorrDHIES {
             return m;
         }
         else {
-            System.out.println("Decryption unsuccessful: t' does not match t");
+            System.out.println("Decryption unsuccessful");
             return null;
         }
     }
@@ -138,6 +153,13 @@ public class SchnorrDHIES {
      * @return True if the signature is valid, otherwise false
      */
     public static boolean verify(byte[] signature, byte[] m, Ed448GPoint V) {
+        if (signature.length < 65) {
+            return false;
+        }
+        if (!V.isOnCurve()) {
+            return false;
+        }
+
         BigInteger h = new BigInteger(Arrays.copyOfRange(signature, 0, 64));
         BigInteger z = new BigInteger(Arrays.copyOfRange(signature, 64, signature.length));
 

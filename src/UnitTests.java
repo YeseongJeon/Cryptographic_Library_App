@@ -1,3 +1,9 @@
+/**
+ * Unit Tests for Edwards Elliptic Curve Arithmetic
+ * and Schnorr/DHIES encryption and signatures
+ * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ */
+
 import org.junit.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
