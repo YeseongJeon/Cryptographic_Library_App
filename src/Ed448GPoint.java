@@ -1,6 +1,6 @@
 /**
  * Edwards Elliptic Curve points and arithmetic
- * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * @author Justin Goding
  */
 
 import java.math.BigInteger;

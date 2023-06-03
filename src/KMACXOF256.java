@@ -1,6 +1,6 @@
 /**
  * Application offering functionality for KMACXOF256 symmetric encryption and hashing
- * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * @author Justin Goding, Andrew Lau
  * Some code borrowed from/inspired by Markku-Juhani Saarinen's C implementation of SHA-3
  * functions at https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
  * Some code borrowed from Professor Paulo Barreto

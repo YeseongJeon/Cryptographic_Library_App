@@ -1,7 +1,7 @@
 /**
  * Unit Tests for Edwards Elliptic Curve Arithmetic
  * and Schnorr/DHIES encryption and signatures
- * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * @author Justin Goding
  */
 
 import org.junit.*;

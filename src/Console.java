@@ -1,6 +1,6 @@
 /**
  * Console code printing messages and receiving input
- * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * @author Yeseong Jeon, Justin Goding
  */
 
 import java.util.*;

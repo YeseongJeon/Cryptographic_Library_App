@@ -1,6 +1,6 @@
 /**
  * SHA-3 derived functions and Keccak sponge for the purpose of implementing KMACXOF256
- * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * @author Yeseong Jeon, Justin Goding
  */
 
 

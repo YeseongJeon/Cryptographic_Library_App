@@ -1,6 +1,6 @@
 /**
  * Schnorr/DHIES encryption and signing with Edwards Elliptic Curve
- * @author Justin Goding, Yeseong Jeon, Andrew Lau
+ * @author Yeseong Jeon, Justin Goding
  */
 
 
