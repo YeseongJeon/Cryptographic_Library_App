@@ -1,4 +1,4 @@
-# Cryptography
+# Cryptographic Library & App
 Implementation of KMACXOF256 and Schnorr/DHIES
 
 Uses the cryptographically secure function KMACXOF256 to:
